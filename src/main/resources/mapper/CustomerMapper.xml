@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.CustomerDao">
+    <resultMap id="baseCustomerRM" type="com.atguigu.jxc.entity.Customer">
+        <id column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="contacts" property="contacts"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="address" property="address"/>
+        <result column="remarks" property="remarks"/>
+    </resultMap>
+    <insert id="save">
+        insert into t_customer(customer_id, customer_name, contacts, phone_number, address, remarks)
+            value (#{customerId}, #{customerName}, #{contacts}, #{phoneNumber}, #{address}, #{remarks})
+    </insert>
+    <update id="update">
+        update t_customer
+        set customer_name = #{customer.customerName},
+            contacts      = #{customer.contacts},
+            phone_number  = #{customer.phoneNumber},
+            address       = #{customer.address},
+            remarks       = #{customer.remarks}
+        where customer_id = #{customerId}
+    </update>
+    <delete id="deleteById">
+        delete
+        from t_customer
+        where customer_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getCustomerPage" resultMap="baseCustomerRM">
+        select customer_id, customer_name, contacts, phone_number, address, remarks from t_customer
+        <where>
+            <if test="customerName != null and customerName != ''">
+                customer_name like "%"#{customerName}"%"
+            </if>
+        </where>
+        limit #{offset},#{rows}
+    </select>
+
+    <select id="getCustomerCount" resultType="java.lang.Long">
+        select count(1) as total
+        from t_customer
+    </select>
+</mapper>

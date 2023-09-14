@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.GoodsDao">
+    <insert id="save">
+        insert into t_goods(goods_code, goods_name, inventory_quantity, min_num, goods_model, goods_producer,
+                            purchasing_price, last_purchasing_price, remarks, selling_price, state, goods_unit,
+                            goods_type_id)
+            value (#{goodsCode}, #{goodsName}, #{inventoryQuantity}, #{minNum},
+                   #{goodsModel}, #{goodsProducer}, #{purchasingPrice}, #{lastPurchasingPrice},
+                   #{remarks}, #{sellingPrice}, #{state}, #{goodsUnit}, #{goodsTypeId})
+    </insert>
+    <update id="update">
+        update t_goods
+        set goods_code            = #{goods.goodsCode},
+            goods_name            = #{goods.goodsName},
+            inventory_quantity    = #{goods.inventoryQuantity},
+            min_num               = #{goods.minNum},
+            goods_model           = #{goods.goodsModel},
+            goods_producer        = #{goods.goodsProducer},
+            purchasing_price      = #{goods.purchasingPrice},
+            last_purchasing_price = #{goods.lastPurchasingPrice},
+            remarks               = #{goods.remarks},
+            selling_price         = #{goods.sellingPrice},
+            state                 = #{goods.state},
+            goods_unit            = #{goods.goodsUnit},
+            goods_type_id         = #{goods.goodsTypeId}
+        where goods_id = #{goodsId}
+    </update>
+    <update id="saveStock">
+        update t_goods
+        set inventory_quantity = #{inventoryQuantity},
+            purchasing_price   = #{purchasingPrice}
+        where goods_id = #{goodsId}
+    </update>
+    <delete id="deleteById">
+        delete
+        from t_goods
+        where goods_id = #{goodsId}
+    </delete>
+
+    <select id="getMaxCode" resultType="java.lang.String">
+        SELECT MAX(goods_code)
+        FROM t_goods
+    </select>
+
+    <resultMap id="baseGoodsVoRM" type="com.atguigu.jxc.domain.GoodsVo">
+        <id column="goods_id" property="goodsId"/>
+        <result column="goods_code" property="goodsCode"/>
+        <result column="goods_name" property="goodsName"/>
+        <result column="inventory_quantity" property="inventoryQuantity"/>
+        <result column="last_purchasing_price" property="lastPurchasingPrice"/>
+        <result column="min_num" property="minNum"/>
+        <result column="goods_model" property="goodsModel"/>
+        <result column="goods_producer" property="goodsProducer"/>
+        <result column="purchasing_price" property="purchasingPrice"/>
+        <result column="remarks" property="remarks"/>
+        <result column="selling_price" property="sellingPrice"/>
+        <result column="state" property="state"/>
+        <result column="goods_unit" property="goodsUnit"/>
+        <result column="goods_type_id" property="goodsTypeId"/>
+        <result column="goods_type_name" property="goodsTypeName"/>
+        <result column="sale_total" property="saleTotal"/>
+    </resultMap>
+    <select id="getGoodsStockPage" resultMap="baseGoodsVoRM">
+        SELECT goods_id,
+        goods_code,
+        goods_name,
+        inventory_quantity,
+        min_num,
+        goods_model,
+        goods_producer,
+        purchasing_price,
+        last_purchasing_price,
+        remarks,
+        selling_price,
+        state,
+        goods_unit,
+        tg.goods_type_id,
+        tgt.goods_type_name
+        FROM t_goods tg
+        left join
+        t_goods_type tgt on tg.goods_type_id = tgt.goods_type_id
+        <where>
+            <if test="goodsTypeId != null and goodsTypeId != ''">
+                AND tg.goods_type_id = #{goodsTypeId}
+            </if>
+            <if test="codeOrName != null and codeOrName != ''">
+                AND (goods_id = #{codeOrName} OR goods_name like "%"#{codeOrName}"%")
+            </if>
+        </where>
+        LIMIT #{offset},#{rows};
+    </select>
+
+    <select id="findGoodsCount" resultType="long">
+        select count(1) as total
+        from t_goods
+    </select>
+    <select id="getGoodsPage" resultType="com.atguigu.jxc.domain.GoodsVo">
+        SELECT goods_id,
+        goods_code,
+        goods_name,
+        inventory_quantity,
+        min_num,
+        goods_model,
+        goods_producer,
+        purchasing_price,
+        last_purchasing_price,
+        remarks,
+        selling_price,
+        state,
+        goods_unit,
+        tg.goods_type_id,
+        tgt.goods_type_name
+        FROM t_goods tg
+        left join
+        t_goods_type tgt on tg.goods_type_id = tgt.goods_type_id
+        <where>
+            <if test="goodsTypeId != null and goodsTypeId != ''">
+                AND tg.goods_type_id = #{goodsTypeId}
+            </if>
+            <if test="goodsName != null and goodsName != ''">
+                OR goods_name like "%"#{goodsName}"%"
+            </if>
+        </where>
+        LIMIT #{offset},#{rows};
+    </select>
+    <select id="getGoodsCountByGoodsTypeId" resultType="long">
+        select count(1)
+        from t_goods
+        where goods_type_id = #{goodsTypeId}
+    </select>
+    <select id="getNoInventoryQuantity" resultType="com.atguigu.jxc.domain.GoodsVo">
+        SELECT goods_id,
+        goods_code,
+        goods_name,
+        inventory_quantity,
+        min_num,
+        goods_model,
+        goods_producer,
+        purchasing_price,
+        last_purchasing_price,
+        remarks,
+        selling_price,
+        state,
+        goods_unit,
+        tg.goods_type_id,
+        tgt.goods_type_name
+        FROM t_goods tg
+        left join
+        t_goods_type tgt on tg.goods_type_id = tgt.goods_type_id
+        <where>
+            <if test="nameOrCode != null and nameOrCode != ''">
+                AND goods_id = #{nameOrCode}
+            </if>
+            <if test="nameOrCode != null and nameOrCode != ''">
+                OR goods_name like "%"#{nameOrCode}"%"
+            </if>
+            and inventory_quantity &lt;= 0
+        </where>
+        LIMIT #{offset},#{rows};
+    </select>
+    <select id="getNoInventoryQuantityCount" resultType="java.lang.Long">
+        select count(1)
+        from t_goods
+        where inventory_quantity &lt;= 0
+    </select>
+    <select id="getHasInventoryQuantity" resultType="com.atguigu.jxc.domain.GoodsVo">
+        SELECT goods_id,
+        goods_code,
+        goods_name,
+        inventory_quantity,
+        min_num,
+        goods_model,
+        goods_producer,
+        purchasing_price,
+        last_purchasing_price,
+        remarks,
+        selling_price,
+        state,
+        goods_unit,
+        tg.goods_type_id,
+        tgt.goods_type_name
+        FROM t_goods tg
+        left join
+        t_goods_type tgt on tg.goods_type_id = tgt.goods_type_id
+        <where>
+            <if test="nameOrCode != null and nameOrCode != ''">
+                AND goods_id = #{nameOrCode}
+            </if>
+            <if test="nameOrCode != null and nameOrCode != ''">
+                OR goods_name like "%"#{nameOrCode}"%"
+            </if>
+            and inventory_quantity > 0
+        </where>
+        LIMIT #{offset},#{rows};
+    </select>
+    <select id="getHasInventoryQuantityCount" resultType="java.lang.Long">
+        select count(1)
+        from t_goods
+        where inventory_quantity > 0
+    </select>
+    <select id="getGoodsById" resultType="com.atguigu.jxc.entity.Goods">
+        select *
+        from t_goods
+        where goods_id = #{goodsId}
+    </select>
+    <select id="getGoodsListAlarm" resultType="com.atguigu.jxc.domain.GoodsVo">
+        select goods_id,
+               goods_code,
+               goods_name,
+               inventory_quantity,
+               min_num,
+               goods_model,
+               goods_producer,
+               purchasing_price,
+               last_purchasing_price,
+               remarks,
+               selling_price,
+               state,
+               goods_unit,
+               goods_type_id
+        from t_goods
+        where inventory_quantity &lt; min_num;
+    </select>
+
+</mapper>

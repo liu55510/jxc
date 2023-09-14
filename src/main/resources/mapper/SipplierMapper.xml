@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.SupplierDao">
+    <resultMap id="baseSupplierRM" type="com.atguigu.jxc.entity.Supplier">
+        <id column="supplier_id" property="supplierId"/>
+        <result column="supplier_name" property="supplierName"/>
+        <result column="contacts" property="contacts"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="address" property="address"/>
+        <result column="remarks" property="remarks"/>
+    </resultMap>
+    <insert id="save">
+        insert into t_supplier(supplier_id, supplier_name, contacts, phone_number, address, remarks)
+            value (#{supplierId}, #{supplierName}, #{contacts}, #{phoneNumber}, #{address}, #{remarks})
+    </insert>
+    <update id="update">
+        update t_supplier
+        set supplier_name = #{supplier.supplierName},
+            contacts      = #{supplier.contacts},
+            phone_number  = #{supplier.phoneNumber},
+            address       = #{supplier.address},
+            remarks       = #{supplier.remarks}
+        where supplier_id = #{supplierId}
+    </update>
+    <delete id="deleteById">
+        delete
+        from t_supplier
+        where supplier_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getSupplierPage" resultMap="baseSupplierRM">
+        select supplier_id, supplier_name, contacts, phone_number, address, remarks from t_supplier
+        <where>
+            <if test="supplierName != null and supplierName != ''">
+                supplier_name like "%"#{supplierName}"%"
+            </if>
+        </where>
+        limit #{offset},#{rows}
+    </select>
+
+    <select id="getSupplierCount" resultType="java.lang.Long">
+        select count(1) as total
+        from t_supplier
+    </select>
+</mapper>
